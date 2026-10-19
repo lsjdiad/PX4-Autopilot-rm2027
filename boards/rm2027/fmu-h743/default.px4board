@@ -46,6 +46,16 @@ CONFIG_COMMON_MAGNETOMETER=y
 #       ⇒ 两颗都会编进固件。本行只是"显式声明板载件"，让配置自解释。
 CONFIG_DRIVERS_MAGNETOMETER_ISENTEK_IST8310=y
 CONFIG_DRIVERS_PWM_OUT=y
+# --- 无线（nRF24L01，临时借用 H1/H2 排针座）-------------------------------------
+# 驱动 = src/drivers/wireless/nrf24l01（命令名 nrf24l01）
+#   H1 座 = 硬件 SPI2 的三根线（SCK=PD3 / MISO=PC2 / MOSI=PC3）
+#   H2 座 = CSN=PC10 / CE=PC11 / IRQ=PB2（PB2=EXTI2）
+# 引脚细节与接线表见 src/drivers/wireless/nrf24l01/NRF24L01_pins.h
+#   （临时接法，硬件改版后只改那一个文件；本次占用不涉及其它外设）
+# 需要 NuttX 侧使能 SPI2：见 nuttx-config/nsh/defconfig 的 CONFIG_STM32H7_SPI2=y
+# 开机不自动启动，用 MAVLink Console 敲 `nrf24l01 start`；收发测试流程见
+#   docs/交接-nrf24l01-无线模块-2026-10-18.md
+CONFIG_DRIVERS_WIRELESS_NRF24L01=y
 CONFIG_DRIVERS_RC_INPUT=y
 CONFIG_COMMON_TELEMETRY=y
 CONFIG_MODULES_ATTITUDE_ESTIMATOR_Q=y

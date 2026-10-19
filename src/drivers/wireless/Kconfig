@@ -1,0 +1,5 @@
+menu "Wireless"
+
+	rsource "*/Kconfig"
+
+endmenu

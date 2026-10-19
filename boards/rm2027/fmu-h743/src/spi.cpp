@@ -109,6 +109,31 @@ constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 		//    ⚠️ 常量名是 DRV_IMU_DEVTYPE_ST_LSM6DSV（带 ST_ 前缀，drv_sensor.h:73），不是 DRV_IMU_DEVTYPE_LSM6DSV
 		initSPIDevice(DRV_IMU_DEVTYPE_ST_LSM6DSV, SPI::CS{GPIO::PortB, GPIO::Pin4}, SPI::DRDY{GPIO::PortD, GPIO::Pin6}),
 	}),
+	// ============================================================================================
+	// SPI2：nRF24L01 无线模块（2026-10-18 起临时借用 H1/H2 排针座）
+	//
+	//   为什么这里要登记一条 SPI2：PX4 有一条**编译期**约束 ——
+	//     "NuttX 里使能了的 SPI 总线，必须在 px4_spi_buses 里登记；没登记的不能使能"
+	//     （validateSPIConfig，见 platforms/nuttx/src/px4/stm/stm32h7/include/px4_arch/
+	//       spi_hw_description.h:39-78，本文件最后那个 static constexpr bool unused 就是在跑它。
+	//      破坏它的报错很难懂：constexpr_assert → call to non-'constexpr' function
+	//      '_constexpr_assert_failure'，看不出是哪条总线。）
+	//   ⇒ 我们在 nuttx-config/nsh/defconfig 里打开了 CONFIG_STM32H7_SPI2=y，
+	//     所以这里必须有一条 SPI2 登记，否则整个固件编不过。
+	//
+	//   devtype 用 DRV_DEVTYPE_UNUSED（0xff）：它不是任何传感器型号，所以
+	//     PX4 的传感器总线迭代器绝不会匹配到它（platforms/common/spi.cpp:144-160 只遍历
+	//     "PX4 设备"），不会被某个传感器驱动误当成自己人、拿这个 CS 去 probe。
+	//   CS = PC10（= H2 排针座第 1 脚）就是 nRF24L01 的 **CSN**，由 nRF24L01 驱动自己拉；
+	//     登记的另一个副作用是 stm32_spiinitialize() 会在启动时把 CS 配成"输出高"，
+	//     正好符合 CSN 空闲电平的要求。
+	//   驱动：src/drivers/wireless/nrf24l01/（命令名 nrf24l01），引脚表见其 NRF24L01_pins.h。
+	//   ⚠️ 硬件改版后若 nRF24L01 换走别的总线/引脚，这里要同步改（或整段删掉，并
+	//      同时把 defconfig 的 CONFIG_STM32H7_SPI2=y 去掉）。
+	// ============================================================================================
+	initSPIBus(SPI::Bus::SPI2, {
+		initSPIDevice(DRV_DEVTYPE_UNUSED, SPI::CS{GPIO::PortC, GPIO::Pin10}), // nRF24L01 CSN
+	}),
 };
 
 static constexpr bool unused = validateSPIConfig(px4_spi_buses);

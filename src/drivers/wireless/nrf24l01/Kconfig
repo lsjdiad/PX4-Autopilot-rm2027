@@ -1,0 +1,13 @@
+menuconfig DRIVERS_WIRELESS_NRF24L01
+	bool "nRF24L01 2.4GHz wireless module (rm2027: SPI2 + H1/H2 排针)"
+	default n
+	---help---
+		nRF24L01(+) 2.4GHz 无线模块驱动，挂在硬件 SPI2（临时借用 H1 排针座），
+		CSN/CE/IRQ 用 H2 排针座的三根空闲 GPIO —— 引脚见
+		src/drivers/wireless/nrf24l01/NRF24L01_pins.h。
+
+		命令：nrf24l01 start / stop / status / regs / send ...
+		开机不自动启动，需要手动 `nrf24l01 start`（或加进板级 init 脚本）。
+
+		射频参数与对端 F103 测试板必须一致：信道 2 / 2Mbps / 0dBm /
+		5 字节地址 11:22:33:44:55 / 自动ACK+重传 / 2 字节 CRC / 动态包长。
